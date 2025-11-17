@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Movie Review Hub</title>
+<style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    background: #121212;
+    color: #fff;
+}
+header {
+    background: #1f1f1f;
+    text-align: center;
+    padding: 20px;
+    font-size: 2em;
+    font-weight: bold;
+}
+.search-container {
+    display: flex;
+    justify-content: center;
+    padding: 15px;
+}
+.search-container input {
+    width: 300px;
+    padding: 10px;
+    border-radius: 5px 0 0 5px;
+    border: none;
+    outline: none;
+}
+.search-container button {
+    padding: 10px 15px;
+    border: none;
+    background: #ff3d00;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 0 5px 5px 0;
+    font-weight: bold;
+}
+nav, .category-filter {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 10px 0;
+}
+nav button {
+    background: #ff3d00;
+    color: #fff;
+    border: none;
+    margin: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+nav button:hover { background: #e63600; }
+.category-filter button {
+    background: #00bcd4;
+    margin: 5px;
+}
+.category-filter button:hover { background: #0097a7; }
+.movies {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+.movie-card {
+    background: #1f1f1f;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+    position: relative;
+}
+.movie-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(255,255,255,0.2);
+}
+.movie-card img {
+    width: 100%;
+    height: 330px;
+    object-fit: cover;
+}
+.movie-info {
+    padding: 10px;
+}
+.movie-info h3 {
+    margin: 0 0 5px 0;
+    font-size: 1.1em;
+}
+.movie-info p {
+    margin: 3px 0;
+    font-size: 0.9em;
+}
+.stars {
+    color: gold;
+    font-size: 1em;
+}
+@media (max-width: 600px) {
+    .search-container input { width: 70%; }
+}
+</style>
+</head>
+<body>
+<header>Movie Review Hub</header>
+
+<div class="search-container">
+    <input type="text" id="searchInput" placeholder="Search movies by title...">
+    <button onclick="searchMovies()">Search</button>
+</div>
+
+<nav id="industryNav">
+    <button onclick="filterIndustry('Hollywood')">Hollywood</button>
+    <button onclick="filterIndustry('Bollywood')">Bollywood</button>
+    <button onclick="filterIndustry('South Indian')">South Indian</button>
+    <button onclick="filterIndustry('All')">All</button>
+</nav>
+
+<div class="category-filter" id="categoryNav"></div>
+
+<div class="movies" id="moviesContainer"></div>
+
+<script>
+const movies = [
+    {title: "The Shawshank Redemption", industry: "Hollywood", category: "Drama", year: 1994, duration: "2h 22m", rating: 9.3, votes:"3.1M", poster:"https://m.media-amazon.com/images/I/51NiGlapXlL._AC_.jpg"},
+    {title: "Forrest Gump", industry: "Hollywood", category: "Drama", year: 1972, duration: "2h 55m", rating: 9.2, votes:"2.2M", poster:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNI2SBzYW95C8Wo7zYV3bzVzem58xPnUzsZGLsnLg17mSMgR574acQZpgNK7a5XeF3THjqgQ&s=10"},
+    {title: "3 Idiots", industry: "Bollywood", category: "Drama", year: 2009, duration: "2h 58m", rating: 8.4, votes:"2.1M", poster:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-WzL4CPuxBA0N6CRx4zM3JQcWyFl5_5lJUw&s"},
+    {title: "Dangal", industry: "Bollywood", category: "Based on True Events", year: 2016, duration: "2h 41m", rating: 8.3, votes:"2.3M", poster:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS85I-YVLVUvtBEhffRz0OUa_d6WhQ4RTC86qrHdvMRQQ&s"},
+    {title: "Baahubali: The Beginning", industry: "South Indian", category: "Drama", year: 2015, duration: "2h 39m", rating: 8.0, votes:"150K", poster:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqkf8-isgD11_7bYf5ETvjePVY7F7zLEyUdw&s"},
+    {title: "RRR", industry: "South Indian", category: "Based on True Events", year: 2017, duration: "2h 47m", rating: 8.2, votes:"130K", poster:"https://stat5.bollywoodhungama.in/wp-content/uploads/2019/03/RRR-2022.jpeg"},
+    {title: "The Godfather", industry: "Hollywood", category: "Drama", year: 1972, duration: "2h 22m", rating: 9.4, votes:"3.1M", poster:"https://www.google.com/url?sa=i&url=https%3A%2F%2Fencrypted-tbn2.gstatic.com%2Fimages%3Fq%3Dtbn%3AANd9GcTWmKJlXjXTiE9hkekFBy9WCRMf0eKZx2mrsgenlO-qzr9H7v0A&psig=AOvVaw2fIVmMyQM2vTTP2iicCTEu&ust=1763482209480000&source=images&cd=vfe&opi=89978449&ved=0CBEQjRxqFwoTCJjklKjJ-ZADFQAAAAAdAAAAABAE"},
+    {title: "Fight Club", industry: "Hollywood", category: "Drama", year: 1999, duration: "2h 22m", rating: 9.3, votes:"3.1M", poster:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRz8f8AfjIRv1rtsWukB4-_g6ZQSW9lueeYl3vA9AzVFBWIJf_Sgsmk8EzxQ-M98dtG3PcwiXF9amGoVShLXgLVmYRhjI2jW2oy-lrRAto&s=10"},
+    {title: "Inception", industry: "Hollywood", category: "Drama", year: 1994, duration: "2h 22m", rating: 9.3, votes:"3.1M", poster:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTEj0RnZ8hY-Rx3pGptH3Fuo3Ch13KrbbkMxQ&s"},
+    {title: "Batman Begins", industry: "Hollywood", category: "Drama", year: 2005, duration: "2h 22m", rating: 9.3, votes:"3.1M", poster:"https://m.media-amazon.com/images/M/MV5BMzA2NDQzZDEtNDU5Ni00YTlkLTg2OWEtYmQwM2Y1YTBjMjFjXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg"},
+    {title: "Parasite", industry: "Hollywood", category: "Drama", year: 1994, duration: "2h 22m", rating: 9.3, votes:"3.1M", poster:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSMkljM7lkw9qVjOa8hOR3DhBdrlHnJlY1NBg&s"},
+    {title: "Life Is Beautiful", industry: "Hollywood", category: "Drama", year: 1994, duration: "2h 22m", rating: 9.3, votes:"3.1M", poster:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwu7-VlXbFGvWmIurs4a2s8RSncKOyb9RpVQ&s"},
+    {title: "The Matrix", industry: "Hollywood", category: "Drama", year: 1994, duration: "2h 22m", rating: 9.3, votes:"3.1M", poster:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRfSjSWOCaw5dnDL2GT1zFd9RMCgUGw5Q2Cfg&s"},
+    {title: "Game of Thrones", industry: "Hollywood", category: "Drama", year: 2011, duration: "2h 22m", rating: 9.3, votes:"3.1M", poster:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS4E9nc5-IthURpP9JRNT3VL3wjw_J5brP7NQ&s"},
+    {title: "Rush", industry: "Hollywood", category: "Drama", year: 2013, duration: "2h 2m", rating: 8.1, votes:"3.1M", poster:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHBMdZFRM62A5kLVp81MLQ5aQR7vydDWkIwA&s"},
+    {title: "Jobs", industry: "Hollywood", category: "Drama", year: 2013, duration: "2h 8m", rating: 7, votes:"3.1M", poster:"https://m.media-amazon.com/images/M/MV5BMTUwMzAyMjgyNV5BMl5BanBnXkFtZTgwOTU3ODUzNjE@._V1_FMjpg_UX1000_.jpg"},
+    {title: "A Beautiful Mind", industry: "Hollywood", category: "Drama", year: 2001, duration: "2h 15m", rating: 8.2, votes:"3.1M", poster:"https://upload.wikimedia.org/wikipedia/en/b/b8/A_Beautiful_Mind_Poster.jpg"},
+    {title: "The Last of the Mohicans ", industry: "Hollywood", category: "Drama", year: 1992, duration: "1h 55m", rating: 9.7, votes:"3.1M", poster:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBSTJFMKihvon-2YEDcfaZBGtuiOtahc6CMA&s"},
+    {title: "300", industry: "Hollywood", category: "Drama", year: 2006, duration: "1h 57m", rating: 9.7, votes:"3.1M", poster:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTTKZZXFMHesI9kFNQAS1GqtCM2LluEiSfLNv9eEm4TiJLpwKrRCAsq9LDzseqDmqmPatqT2sB5r4feOIW6pRXp73kDbzTl4gLZHWrMbg&s=10"}, 
+    {title: "Gandhi, My Father", industry: "Bollywood", category: "Based on True Events", year: 2007, duration: "2h 16m", rating: 8.3, votes:"2.3M", poster:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT6lpfPc1B49jgxAYBzyKsyPi9li1wK16Ydew&s"},
+    {title: "The Lunchbox", industry: "Bollywood", category: "Based on True Events", year: 2013, duration: "1h 44m", rating: 7.8, votes:"2.3M", poster:"https://upload.wikimedia.org/wikipedia/en/8/81/The_Lunchbox_poster.jpg"},
+    {title: "Maqbool", industry: "Bollywood", category: "Based on True Events", year: 2003, duration: "2h 12m", rating: 8, votes:"2.3M", poster:"https://upload.wikimedia.org/wikipedia/en/7/76/Maqbool_poster.jpg"},
+    {title: "Gulaal", industry: "Bollywood", category: "Based on True Events", year: 2009, duration: "2h 41m", rating: 8, votes:"2.3M", poster:"https://upload.wikimedia.org/wikipedia/en/8/8f/Gulaal.jpg"},
+    {title: "Eklavya: The Royal Guard", industry: "Bollywood", category: "Based on True Events", year: 2007, duration: "1h 45m", rating: 8.3, votes:"2.3M", poster:"https://upload.wikimedia.org/wikipedia/en/f/fc/Eklavya.jpg"},
+    {title: "Omkara", industry: "Bollywood", category: "Based on True Events", year: 2006, duration: "2h 35m", rating: 8, votes:"2.3M", poster:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStF3OZE61_pQgQu70tebXahFqqqB0oVUidSQ&s"},
+    {title: "Mother India", industry: "Bollywood", category: "Based on True Events", year: 1957, duration: "2h 55m", rating: 7.8, votes:"2.3M", poster:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRfKHEMnPK9gqnOMJja3Z8vPQY0ugBh-s47dQ&s"},
+    {title: "My Name Is Khan", industry: "Bollywood", category: "Based on True Events", year: 2010, duration: "2h 45m", rating: 7.9, votes:"2.3M", poster:"https://m.media-amazon.com/images/M/MV5BMTUyMTA4NDYzMV5BMl5BanBnXkFtZTcwMjk5MzcxMw@@._V1_FMjpg_UX1000_.jpg"},
+    {title: "Ship of Theseus", industry: "Bollywood", category: "Based on True Events", year: 2012, duration: "2h 19m", rating: 8, votes:"2.3M", poster:"https://m.media-amazon.com/images/I/51D4sTPGA8L._AC_UF1000,1000_QL80_.jpg"},
+    {title: "Tumbbad", industry: "Bollywood", category: "Based on True Events", year: 2018, duration: "1h 44m", rating: 8.3, votes:"3.3M", poster:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWtWY8TA3oRuC4YPYUSdz1sDLCEZyZQAyKZQ&s"},
+
+ 
+   
+  
+
+];
+
+let selectedIndustry = 'All';
+let selectedCategory = 'All';
+let searchQuery = '';
+
+function displayMovies(movieList) {
+    const container = document.getElementById('moviesContainer');
+    container.innerHTML = '';
+    if(movieList.length === 0) {
+        container.innerHTML = `<p style="text-align:center;">No movies found.</p>`;
+        return;
+    }
+    movieList.forEach(movie => {
+        const starsCount = Math.round((movie.rating/10)*5);
+        let stars = '';
+        for(let i=0;i<5;i++){
+            stars += i < starsCount ? '★' : '☆';
+        }
+        const card = document.createElement('div');
+        card.classList.add('movie-card');
+        card.innerHTML = `
+            <img src="${movie.poster || 'https://via.placeholder.com/200x330?text=No+Image'}" alt="${movie.title}">
+            <div class="movie-info">
+                <h3>${movie.title} (${movie.year})</h3>
+                <p><strong>Industry:</strong> ${movie.industry}</p>
+                <p><strong>Category:</strong> ${movie.category}</p>
+                <p><strong>Rating:</strong> ${movie.rating} <span class="stars">${stars}</span> (${movie.votes})</p>
+                <p><strong>Duration:</strong> ${movie.duration}</p>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function filterIndustry(industry){
+    selectedIndustry = industry;
+    selectedCategory = 'All';
+    document.getElementById('searchInput').value = '';
+    searchQuery = '';
+    displayCategoryButtons();
+    filterMovies();
+}
+
+function filterCategory(category){
+    selectedCategory = category;
+    filterMovies();
+}
+
+function displayCategoryButtons(){
+    const categoryNav = document.getElementById('categoryNav');
+    categoryNav.innerHTML = '';
+    let filteredMovies = selectedIndustry === 'All' ? movies : movies.filter(m=>m.industry===selectedIndustry);
+    const categories = [...new Set(filteredMovies.map(m=>m.category))];
+    categories.forEach(cat=>{
+        const btn = document.createElement('button');
+        btn.textContent = cat;
+        btn.onclick = ()=>filterCategory(cat);
+        categoryNav.appendChild(btn);
+    });
+    if(categories.length>0){
+        const allBtn = document.createElement('button');
+        allBtn.textContent = 'All';
+        allBtn.onclick = ()=>filterCategory('All');
+        categoryNav.insertBefore(allBtn,categoryNav.firstChild);
+    }
+}
+
+function searchMovies(){
+    searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+    filterMovies();
+}
+
+function filterMovies(){
+    let filtered = movies;
+    if(selectedIndustry !== 'All') filtered = filtered.filter(m=>m.industry===selectedIndustry);
+    if(selectedCategory !== 'All') filtered = filtered.filter(m=>m.category===selectedCategory);
+    if(searchQuery !== '') filtered = filtered.filter(m=>m.title.toLowerCase().includes(searchQuery));
+    displayMovies(filtered);
+}
+
+// Initial display
+displayCategoryButtons();
+filterMovies();
+</script>
+</body>
+</html>
